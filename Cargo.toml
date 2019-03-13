@@ -1,10 +1,10 @@
 [package]
-name = "topiks"
+name = "topiks-kafka-client"
 version = "0.1.0-alpha+001"
 authors = ["Sean Policarpio <sean@policarp.io>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/kdrakon/topiks"
+repository = "https://github.com/kdrakon/topiks-kafka-client"
 keywords = ["cli", "kafka"]
 
 [profile.release]
@@ -13,8 +13,6 @@ panic = 'abort'
 
 [dependencies]
 byteorder = "1.2.1"
-termion = "1.5.1"
-clap = "2.31.2"
 native-tls = "0.2.2"
 
 [dev-dependencies]

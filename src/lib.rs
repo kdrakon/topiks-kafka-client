@@ -1,3 +1,39 @@
+extern crate byteorder;
+extern crate native_tls;
+#[cfg(test)]
+#[macro_use]
+extern crate proptest;
+
+pub mod api_client;
+pub mod kafka_protocol;
+
+#[derive(Clone, Debug)]
+pub struct BootstrapServer {
+    pub domain: String,
+    pub port: i32,
+    pub use_tls: bool,
+}
+
+impl BootstrapServer {
+    pub fn of(domain: String, port: i32, use_tls: bool) -> BootstrapServer {
+        BootstrapServer { domain, port, use_tls }
+    }
+    pub fn from_arg(addr_arg: &str, use_tls: bool) -> Option<BootstrapServer> {
+        let split: Vec<&str> = addr_arg.split(':').collect::<Vec<&str>>();
+        match split.as_slice() {
+            [domain_ip, port] => port.parse::<i32>().ok().map(|port| BootstrapServer::of(String::from(*domain_ip), port, use_tls)),
+            _ => None,
+        }
+    }
+    pub fn as_socket_addr(&self) -> String {
+        format!("{}:{}", self.domain, self.port)
+    }
+}
+
+fn to_hex_array(bytes: &Vec<u8>) -> Vec<String> {
+    bytes.iter().cloned().map(|b| format!("0x{:02X}", b)).collect::<Vec<String>>()
+}
+
 type Thunk<A, E> = Box<Fn() -> Result<A, E>>;
 
 pub struct IO<A, E> {

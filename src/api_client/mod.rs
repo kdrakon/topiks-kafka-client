@@ -10,8 +10,8 @@ use native_tls::TlsConnector;
 use kafka_protocol::protocol_request::*;
 use kafka_protocol::protocol_response::*;
 use kafka_protocol::protocol_serializable::*;
-use util::io::IO;
 use BootstrapServer;
+use IO;
 
 #[derive(Debug)]
 pub struct ApiRequestError {
