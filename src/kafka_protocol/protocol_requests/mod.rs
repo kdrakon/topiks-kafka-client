@@ -1,4 +1,5 @@
 pub mod alterconfigs_request;
+pub mod createtopics_request;
 pub mod deletetopics_request;
 pub mod describeconfigs_request;
 pub mod findcoordinator_request;
