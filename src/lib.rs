@@ -8,20 +8,20 @@ pub mod api_client;
 pub mod kafka_protocol;
 
 #[derive(Clone, Debug)]
-pub struct BootstrapServer {
+pub struct KafkaServerAddr {
     pub domain: String,
     pub port: i32,
     pub use_tls: bool,
 }
 
-impl BootstrapServer {
-    pub fn of(domain: String, port: i32, use_tls: bool) -> BootstrapServer {
-        BootstrapServer { domain, port, use_tls }
+impl KafkaServerAddr {
+    pub fn of(domain: String, port: i32, use_tls: bool) -> KafkaServerAddr {
+        KafkaServerAddr { domain, port, use_tls }
     }
-    pub fn from_arg(addr_arg: &str, use_tls: bool) -> Option<BootstrapServer> {
+    pub fn from_arg(addr_arg: &str, use_tls: bool) -> Option<KafkaServerAddr> {
         let split: Vec<&str> = addr_arg.split(':').collect::<Vec<&str>>();
         match split.as_slice() {
-            [domain_ip, port] => port.parse::<i32>().ok().map(|port| BootstrapServer::of(String::from(*domain_ip), port, use_tls)),
+            [domain_ip, port] => port.parse::<i32>().ok().map(|port| KafkaServerAddr::of(String::from(*domain_ip), port, use_tls)),
             _ => None,
         }
     }

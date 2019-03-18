@@ -5,6 +5,7 @@ use kafka_protocol::api_verification::ApiVerificationFailure::ApiVersionNotSuppo
 use kafka_protocol::api_verification::ApiVerificationFailure::NoVerification;
 use kafka_protocol::protocol_request::Request;
 use kafka_protocol::protocol_requests::alterconfigs_request::AlterConfigsRequest;
+use kafka_protocol::protocol_requests::createtopics_request::CreateTopicsRequest;
 use kafka_protocol::protocol_requests::deletetopics_request::DeleteTopicsRequest;
 use kafka_protocol::protocol_requests::describeconfigs_request::DescribeConfigsRequest;
 use kafka_protocol::protocol_requests::findcoordinator_request::FindCoordinatorRequest;
@@ -13,7 +14,7 @@ use kafka_protocol::protocol_requests::metadata_request::MetadataRequest;
 use kafka_protocol::protocol_requests::offsetfetch_request::OffsetFetchRequest;
 use kafka_protocol::protocol_response::Response;
 use kafka_protocol::protocol_serializable::*;
-use BootstrapServer;
+use KafkaServerAddr;
 
 #[derive(Debug)]
 pub enum ApiVerificationFailure {
@@ -73,10 +74,10 @@ pub struct ApiVersionQuery(pub i16, pub i16); // api -> version
 
 pub fn apply<T: ApiClientTrait + 'static>(
     api_client: T,
-    bootstrap_server: &BootstrapServer,
+    server_addr: &KafkaServerAddr,
     queries: &Vec<ApiVersionQuery>,
 ) -> Result<(), Vec<ApiVerificationFailure>> {
-    let result: Result<Response<ApiVersionResponse>, ApiRequestError> = api_client.request(bootstrap_server, Request::of(ApiVersionsRequest {}));
+    let result: Result<Response<ApiVersionResponse>, ApiRequestError> = api_client.request(server_addr, Request::of(ApiVersionsRequest {}));
 
     let verification = result.map(|response| response.response_message.api_versions).map(|api_versions| {
         let api_errors: Vec<ApiVerificationFailure> = vec![];
@@ -120,6 +121,7 @@ pub trait KafkaApiVersioned {
 pub fn apis_in_use() -> Vec<ApiVersionQuery> {
     vec![
         ApiVersionQuery(AlterConfigsRequest::api_key(), AlterConfigsRequest::version()),
+        ApiVersionQuery(CreateTopicsRequest::api_key(), CreateTopicsRequest::version()),
         ApiVersionQuery(DeleteTopicsRequest::api_key(), DeleteTopicsRequest::version()),
         ApiVersionQuery(DescribeConfigsRequest::api_key(), DescribeConfigsRequest::version()),
         ApiVersionQuery(FindCoordinatorRequest::api_key(), FindCoordinatorRequest::version()),

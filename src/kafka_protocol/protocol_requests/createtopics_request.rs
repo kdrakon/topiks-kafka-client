@@ -115,7 +115,8 @@ mod tests {
         fn verify_serde_for_createtopics_request(ref topic in ".*") {
             let request = CreateTopicsRequest {
                 create_topic_requests: vec![Request { topic: topic.clone(), num_partitions: 16,  replication_factor: 3, replica_assignments: vec![], config_entries: vec![] }],
-                timeout: 42
+                timeout: 42,
+                validate_only: false
             };
             match request.into_protocol_bytes() {
                 Ok(_bytes) => (),

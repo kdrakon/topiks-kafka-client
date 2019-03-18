@@ -10,7 +10,7 @@ use native_tls::TlsConnector;
 use kafka_protocol::protocol_request::*;
 use kafka_protocol::protocol_response::*;
 use kafka_protocol::protocol_serializable::*;
-use BootstrapServer;
+use KafkaServerAddr;
 use IO;
 
 #[derive(Debug)]
@@ -34,7 +34,7 @@ impl ApiRequestError {
 }
 
 pub trait ApiClientTrait {
-    fn request<T, U>(&self, bootstrap_server: &BootstrapServer, request: Request<T>) -> Result<Response<U>, ApiRequestError>
+    fn request<T, U>(&self, server_addr: &KafkaServerAddr, request: Request<T>) -> Result<Response<U>, ApiRequestError>
     where
         T: ProtocolSerializable,
         Vec<u8>: ProtocolDeserializable<Response<U>>;
@@ -52,7 +52,7 @@ impl ApiClient {
 }
 
 impl ApiClientTrait for ApiClient {
-    fn request<T, U>(&self, bootstrap_server: &BootstrapServer, request: Request<T>) -> Result<Response<U>, ApiRequestError>
+    fn request<T, U>(&self, server_addr: &KafkaServerAddr, request: Request<T>) -> Result<Response<U>, ApiRequestError>
     where
         T: ProtocolSerializable,
         Vec<u8>: ProtocolDeserializable<Response<U>>,
@@ -61,8 +61,8 @@ impl ApiClientTrait for ApiClient {
         let _api_key_version = request.header.api_version;
         let request_bytes = request.into_protocol_bytes().map_err(|err| ApiRequestError::of(format!("Could not serialize request. {}", err)));
 
-        fn tcp_stream(bootstrap_server: &BootstrapServer) -> Result<TcpStream, ApiRequestError> {
-            TcpStream::connect(bootstrap_server.as_socket_addr()).map_err(|err| ApiRequestError::of(err.to_string()))
+        fn tcp_stream(server_addr: &KafkaServerAddr) -> Result<TcpStream, ApiRequestError> {
+            TcpStream::connect(server_addr.as_socket_addr()).map_err(|err| ApiRequestError::of(err.to_string()))
         }
 
         fn write_bytes<S: Write>(stream: &mut S, bytes: Vec<u8>) -> Result<usize, ApiRequestError> {
@@ -81,14 +81,14 @@ impl ApiClientTrait for ApiClient {
                 .map_err(|err| ApiRequestError::of(err.to_string()))
         }
 
-        let response = request_bytes.and_then(|bytes| match bootstrap_server.use_tls {
-            false => tcp_stream(bootstrap_server).and_then(|ref mut stream| write_bytes(stream, bytes).and_then(|_| read_bytes(stream))),
-            true => tcp_stream(bootstrap_server).and_then(|stream| {
+        let response = request_bytes.and_then(|bytes| match server_addr.use_tls {
+            false => tcp_stream(server_addr).and_then(|ref mut stream| write_bytes(stream, bytes).and_then(|_| read_bytes(stream))),
+            true => tcp_stream(server_addr).and_then(|stream| {
                 TlsConnector::new()
                     .map_err(|err| ApiRequestError::of(err.to_string()))
                     .and_then(|tls_connector| {
                         tls_connector
-                            .connect(bootstrap_server.domain.as_str(), stream)
+                            .connect(server_addr.domain.as_str(), stream)
                             .map_err(|err| ApiRequestError::of(format!("TLS handshake error. {}", err)))
                     })
                     .and_then(|ref mut stream| write_bytes(stream, bytes).and_then(|_| read_bytes(stream)))
@@ -97,8 +97,7 @@ impl ApiClientTrait for ApiClient {
 
         // DEBUG response
         //        response.iter().for_each(|bytes| {
-        //            use util::utils;
-        //            println!("bytes for API key {}:v{}: {:?}", _api_key, _api_key_version, utils::to_hex_array(&bytes));
+        //            println!("bytes for API key {}:v{}: {:?}", _api_key, _api_key_version, ::to_hex_array(&bytes));
         //        });
 
         response.and_then(|bytes| bytes.into_protocol_type().map_err(|e| ApiRequestError::of(e.error)))
