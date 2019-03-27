@@ -37,38 +37,38 @@ impl DeserializeError {
 }
 
 // Deserializer Functions
-fn deserialize_number<N>(bytes: Vec<u8>, f: fn(Cursor<Vec<u8>>) -> IOResult<N>) -> ProtocolDeserializeResult<N> {
-    f(Cursor::new(bytes)).map_err(|e| DeserializeError::of(e.description()))
+fn deserialize_number<N>(bytes: &[u8], f: fn(Cursor<Vec<u8>>) -> IOResult<N>) -> ProtocolDeserializeResult<N> {
+    f(Cursor::new(bytes.to_vec())).map_err(|e| DeserializeError::of(e.description()))
 }
 
-pub fn de_i32(bytes: Vec<u8>) -> ProtocolDeserializeResult<i32> {
+pub fn de_i32(bytes: &[u8]) -> ProtocolDeserializeResult<i32> {
     deserialize_number(bytes, |mut c| c.read_i32::<BigEndian>())
 }
 
-pub fn de_i16(bytes: Vec<u8>) -> ProtocolDeserializeResult<i16> {
+pub fn de_i16(bytes: &[u8]) -> ProtocolDeserializeResult<i16> {
     deserialize_number(bytes, |mut c| c.read_i16::<BigEndian>())
 }
 
-pub fn de_i64(bytes: Vec<u8>) -> ProtocolDeserializeResult<i64> {
+pub fn de_i64(bytes: &[u8]) -> ProtocolDeserializeResult<i64> {
     deserialize_number(bytes, |mut c| c.read_i64::<BigEndian>())
 }
 
-pub type DynamicSize<T> = (T, Vec<u8>); // Vec<u8> == remaining bytes after
+pub type DynamicSize<'a, T> = (T, &'a [u8]); // &[u8] == remaining bytes after
 
-pub fn de_array<T, F>(bytes: Vec<u8>, deserialize_t: F) -> ProtocolDeserializeResult<DynamicSize<Vec<T>>>
+pub fn de_array<T, F>(bytes: &[u8], deserialize_t: F) -> ProtocolDeserializeResult<DynamicSize<Vec<T>>>
 where
-    F: Fn(Vec<u8>) -> ProtocolDeserializeResult<DynamicSize<T>>,
+    F: Fn(&[u8]) -> ProtocolDeserializeResult<DynamicSize<T>>,
 {
-    let array_size = de_i32(bytes[0..4].to_vec());
+    let array_size = de_i32(&bytes[0..4]);
     array_size.and_then(|expected_elements| {
-        let element_bytes = bytes[4..].to_vec();
+        let element_bytes = &bytes[4..];
         de_array_transform(element_bytes, expected_elements, deserialize_t)
     })
 }
 
-fn de_array_transform<T, F>(bytes: Vec<u8>, elements: i32, deserialize_t: F) -> ProtocolDeserializeResult<DynamicSize<Vec<T>>>
+fn de_array_transform<T, F>(bytes: &[u8], elements: i32, deserialize_t: F) -> ProtocolDeserializeResult<DynamicSize<Vec<T>>>
 where
-    F: Fn(Vec<u8>) -> ProtocolDeserializeResult<DynamicSize<T>>,
+    F: Fn(&[u8]) -> ProtocolDeserializeResult<DynamicSize<T>>,
 {
     if elements <= 0 {
         Ok((vec![] as Vec<T>, bytes))
@@ -84,12 +84,12 @@ where
     }
 }
 
-pub fn de_string(bytes: Vec<u8>) -> ProtocolDeserializeResult<DynamicSize<Option<String>>> {
-    de_i16(bytes[0..2].to_vec()).and_then(|byte_length| match byte_length {
-        -1 => Ok((None, bytes[2..].to_vec())),
+pub fn de_string(bytes: &[u8]) -> ProtocolDeserializeResult<DynamicSize<Option<String>>> {
+    de_i16(&bytes[0..2]).and_then(|byte_length| match byte_length {
+        -1 => Ok((None, &bytes[2..])),
         _ => {
             let end_index = (byte_length as usize) + 2;
-            let remaining_bytes = bytes[end_index..].to_vec();
+            let remaining_bytes = &bytes[end_index..];
             let string_bytes = &bytes[2..end_index];
 
             match from_utf8(string_bytes) {
@@ -111,7 +111,7 @@ mod tests {
         fn verify_de_string(ref s in ".*") {
 
             let bytes = s.clone().into_protocol_bytes().unwrap();
-            match de_string(bytes) {
+            match de_string(&bytes) {
                 Ok((Some(string), remaining_bytes)) => {
                     assert!(remaining_bytes.is_empty());
                     assert_eq!(s.clone(), string);
@@ -122,9 +122,9 @@ mod tests {
             // verify null string
             let mut bytes = I16(-1).into_protocol_bytes().unwrap();
             bytes.append(&mut vec![40, 41, 42]);
-            match de_string(bytes) {
+            match de_string(&bytes) {
                 Ok((None, remaining_bytes)) => {
-                    assert_eq!(remaining_bytes, vec![40, 41, 42]);
+                    assert_eq!(remaining_bytes.to_vec(), vec![40, 41, 42]);
                 }
                 _ => panic!("test failed")
             }
@@ -138,7 +138,7 @@ mod tests {
             let array = vec![a.clone(), b.clone(), c.clone()];
             let bytes = array.into_protocol_bytes().unwrap();
             let result =
-                de_array(bytes, |element| {
+                de_array(&bytes, |element| {
                     de_string(element).map(|(opt_string, remaining_bytes)| {
                         (opt_string.expect("should be deserializable string"), remaining_bytes)
                     })

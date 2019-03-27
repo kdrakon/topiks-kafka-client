@@ -30,6 +30,6 @@ pub struct ResponseHeader {
 
 impl ProtocolDeserializable<ResponseHeader> for Vec<u8> {
     fn into_protocol_type(self) -> ProtocolDeserializeResult<ResponseHeader> {
-        de_i32(self).map(|correlation_id| ResponseHeader { correlation_id })
+        de_i32(self.as_slice()).map(|correlation_id| ResponseHeader { correlation_id })
     }
 }

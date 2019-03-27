@@ -56,16 +56,15 @@ pub struct ApiVersion {
 
 impl ProtocolDeserializable<ApiVersionResponse> for Vec<u8> {
     fn into_protocol_type(self) -> ProtocolDeserializeResult<ApiVersionResponse> {
-        fn deserialize_api_version(bytes: Vec<u8>) -> ProtocolDeserializeResult<DynamicSize<ApiVersion>> {
-            de_i16(bytes[0..=1].to_vec()).and_then(|api_key| {
-                de_i16(bytes[2..=3].to_vec()).and_then(|min_version| {
-                    de_i16(bytes[4..=5].to_vec()).map(|max_version| (ApiVersion { api_key, min_version, max_version }, bytes[6..].to_vec()))
-                })
+        fn deserialize_api_version(bytes: &[u8]) -> ProtocolDeserializeResult<DynamicSize<ApiVersion>> {
+            de_i16(&bytes[0..=1]).and_then(|api_key| {
+                de_i16(&bytes[2..=3])
+                    .and_then(|min_version| de_i16(&bytes[4..=5]).map(|max_version| (ApiVersion { api_key, min_version, max_version }, &bytes[6..])))
             })
         }
 
-        de_i16(self[0..=1].to_vec()).and_then(|error_code| {
-            de_array(self[2..].to_vec(), deserialize_api_version).map(|(api_versions, _bytes)| ApiVersionResponse { error_code, api_versions })
+        de_i16(&self[0..=1]).and_then(|error_code| {
+            de_array(&self[2..], deserialize_api_version).map(|(api_versions, _bytes)| ApiVersionResponse { error_code, api_versions })
         })
     }
 }

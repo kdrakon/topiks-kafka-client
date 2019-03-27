@@ -25,7 +25,7 @@ impl Display for TopicError {
 
 impl ProtocolDeserializable<CreateTopicsResponse> for Vec<u8> {
     fn into_protocol_type(self) -> ProtocolDeserializeResult<CreateTopicsResponse> {
-        de_array(self.to_vec(), deserialize_topic_errors).map(|(topic_errors, bytes)| {
+        de_array(&self, deserialize_topic_errors).map(|(topic_errors, bytes)| {
             if !bytes.is_empty() {
                 panic!("Unexpected bytes deserializing CreateTopicsResponse")
             } else {
@@ -35,11 +35,11 @@ impl ProtocolDeserializable<CreateTopicsResponse> for Vec<u8> {
     }
 }
 
-fn deserialize_topic_errors(bytes: Vec<u8>) -> ProtocolDeserializeResult<DynamicSize<TopicError>> {
-    de_string(bytes).and_then(|(topic, remaining_bytes)| {
+fn deserialize_topic_errors(bytes: &[u8]) -> ProtocolDeserializeResult<DynamicSize<TopicError>> {
+    de_string(&bytes).and_then(|(topic, remaining_bytes)| {
         let topic = topic.expect("Unexpected missing topic name in TopicError");
-        de_i16(remaining_bytes[0..2].to_vec()).and_then(|error_code| {
-            de_string(remaining_bytes[2..].to_vec())
+        de_i16(&remaining_bytes[0..2]).and_then(|error_code| {
+            de_string(&remaining_bytes[2..])
                 .map(|(error_message, remaining_bytes)| (TopicError { topic, error_code, error_message }, remaining_bytes))
         })
     })
