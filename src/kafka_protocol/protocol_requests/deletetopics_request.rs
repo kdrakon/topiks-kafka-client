@@ -22,12 +22,7 @@ impl ProtocolSerializable for DeleteTopicsRequest {
     fn into_protocol_bytes(self) -> ProtocolSerializeResult {
         let topics = self.topics;
         let timeout = I32(self.timeout);
-        topics.into_protocol_bytes().and_then(|mut t| {
-            timeout.into_protocol_bytes().map(|ref mut a| {
-                t.append(a);
-                t
-            })
-        })
+        topics.into_protocol_bytes().and_then(|topics| timeout.into_protocol_bytes().map(|timeout| [topics, timeout].concat()))
     }
 }
 

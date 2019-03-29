@@ -27,19 +27,9 @@ where
     fn into_protocol_bytes(self) -> ProtocolSerializeResult {
         let header = self.header;
         let request_message = self.request_message;
-        let header_and_request = header.into_protocol_bytes().and_then(|mut h| {
-            request_message.into_protocol_bytes().map(|ref mut rm| {
-                h.append(rm);
-                h
-            })
-        });
+        let header_and_request = header.into_protocol_bytes().and_then(|h| request_message.into_protocol_bytes().map(|rm| [h, rm].concat()));
 
-        header_and_request.and_then(|ref mut hr| {
-            I32(hr.len() as i32).into_protocol_bytes().map(|mut message_size| {
-                message_size.append(hr);
-                message_size
-            })
-        })
+        header_and_request.and_then(|hr| I32(hr.len() as i32).into_protocol_bytes().map(|message_size| [message_size, hr].concat()))
     }
 }
 
@@ -55,15 +45,10 @@ pub struct RequestHeader {
 
 impl ProtocolSerializable for RequestHeader {
     fn into_protocol_bytes(self) -> ProtocolSerializeResult {
-        I16(self.api_key).into_protocol_bytes().and_then(|mut api_key| {
-            I16(self.api_version).into_protocol_bytes().and_then(|ref mut api_version| {
-                I32(self.correlation_id).into_protocol_bytes().and_then(|ref mut correlation_id| {
-                    self.client_id.into_protocol_bytes().and_then(|ref mut client_id| {
-                        api_key.append(api_version);
-                        api_key.append(correlation_id);
-                        api_key.append(client_id);
-                        Ok(api_key.clone())
-                    })
+        I16(self.api_key).into_protocol_bytes().and_then(|api_key| {
+            I16(self.api_version).into_protocol_bytes().and_then(|api_version| {
+                I32(self.correlation_id).into_protocol_bytes().and_then(|correlation_id| {
+                    self.client_id.into_protocol_bytes().map(|client_id| [api_key, api_version, correlation_id, client_id].concat())
                 })
             })
         })

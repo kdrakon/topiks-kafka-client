@@ -31,11 +31,7 @@ impl ProtocolPrimitives {
 
 impl ProtocolSerializable for String {
     fn into_protocol_bytes(self) -> ProtocolSerializeResult {
-        I16(self.len() as i16).into_protocol_bytes().and_then(|mut string_size| {
-            let mut string_bytes = self.as_bytes().to_vec();
-            string_size.append(&mut string_bytes);
-            Ok(string_size)
-        })
+        I16(self.len() as i16).into_protocol_bytes().map(|string_size| [string_size.as_slice(), self.as_bytes()].concat())
     }
 }
 
@@ -71,19 +67,9 @@ where
 
         let sequenced = self.into_iter().map(|t| t.into_protocol_bytes()).collect::<Result<Vec<Vec<u8>>>>();
 
-        let array_in_bytes = sequenced.map(|ref s| {
-            s.into_iter().fold(vec![] as Vec<u8>, |mut acc: Vec<u8>, v| {
-                acc.append(&mut v.clone());
-                acc
-            })
-        });
+        let array_in_bytes = sequenced.map(|s| s.concat());
 
-        array_length.and_then(|mut payload| {
-            array_in_bytes.map(|ref mut aib| {
-                payload.append(aib);
-                payload
-            })
-        })
+        array_length.and_then(|array_length| array_in_bytes.map(|ref mut aib| [array_length.as_slice(), aib.as_slice()].concat()))
     }
 }
 

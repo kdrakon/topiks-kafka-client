@@ -29,11 +29,8 @@ impl ProtocolSerializable for DescribeConfigsRequest {
     fn into_protocol_bytes(self) -> ProtocolSerializeResult {
         let resources = self.resources;
         let include_synonyms = self.include_synonyms;
-        resources.into_protocol_bytes().and_then(|mut resources| {
-            ProtocolPrimitives::Boolean(include_synonyms).into_protocol_bytes().map(|ref mut include_synonyms| {
-                resources.append(include_synonyms);
-                resources
-            })
+        resources.into_protocol_bytes().and_then(|resources| {
+            ProtocolPrimitives::Boolean(include_synonyms).into_protocol_bytes().map(|include_synonyms| [resources, include_synonyms].concat())
         })
     }
 }
@@ -43,13 +40,9 @@ impl ProtocolSerializable for Resource {
         let resource_type = ProtocolPrimitives::I8(self.resource_type);
         let resource_name = self.resource_name;
         let config_names = self.config_names;
-        resource_type.into_protocol_bytes().and_then(|mut resource_type| {
-            resource_name.clone().into_protocol_bytes().and_then(|ref mut resource_name| {
-                config_names.into_protocol_bytes().map(|ref mut config_names| {
-                    resource_type.append(resource_name);
-                    resource_type.append(config_names);
-                    resource_type
-                })
+        resource_type.into_protocol_bytes().and_then(|resource_type| {
+            resource_name.clone().into_protocol_bytes().and_then(|resource_name| {
+                config_names.into_protocol_bytes().map(|config_names| [resource_type, resource_name, config_names].concat())
             })
         })
     }
