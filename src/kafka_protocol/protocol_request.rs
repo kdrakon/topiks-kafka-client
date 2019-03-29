@@ -1,7 +1,7 @@
-use kafka_protocol::api_verification::KafkaApiVersioned;
-use kafka_protocol::protocol_primitives::ProtocolPrimitives::*;
-use kafka_protocol::protocol_serializable::ProtocolSerializeResult;
-use kafka_protocol::protocol_serializable::*;
+use crate::kafka_protocol::api_verification::KafkaApiVersioned;
+use crate::kafka_protocol::protocol_primitives::ProtocolPrimitives::*;
+use crate::kafka_protocol::protocol_serializable::ProtocolSerializeResult;
+use crate::kafka_protocol::protocol_serializable::*;
 
 /// Top-level request which can be sent to a Kafka broker.
 ///

@@ -1,7 +1,7 @@
-use kafka_protocol::api_verification::KafkaApiVersioned;
-use kafka_protocol::protocol_primitives::ProtocolPrimitives;
-use kafka_protocol::protocol_serializable::ProtocolSerializable;
-use kafka_protocol::protocol_serializable::ProtocolSerializeResult;
+use crate::kafka_protocol::api_verification::KafkaApiVersioned;
+use crate::kafka_protocol::protocol_primitives::ProtocolPrimitives;
+use crate::kafka_protocol::protocol_serializable::ProtocolSerializable;
+use crate::kafka_protocol::protocol_serializable::ProtocolSerializeResult;
 
 #[derive(Clone)]
 pub struct DescribeConfigsRequest {
@@ -50,7 +50,7 @@ impl ProtocolSerializable for Resource {
 
 #[cfg(test)]
 mod tests {
-    use kafka_protocol::protocol_requests::describeconfigs_request::*;
+    use crate::kafka_protocol::protocol_requests::describeconfigs_request::*;
 
     fn verify_serde_for_describeconfigs_request(name_a: String, name_b: String) {
         let resources = vec![

@@ -2,8 +2,8 @@ extern crate byteorder;
 
 use std::io::*;
 
-use kafka_protocol::protocol_serializable::ProtocolSerializeResult;
-use kafka_protocol::protocol_serializable::*;
+use crate::kafka_protocol::protocol_serializable::ProtocolSerializeResult;
+use crate::kafka_protocol::protocol_serializable::*;
 
 use self::byteorder::{BigEndian, WriteBytesExt};
 use self::ProtocolPrimitives::*;

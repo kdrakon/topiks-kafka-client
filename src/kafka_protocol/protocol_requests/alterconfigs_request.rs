@@ -1,6 +1,6 @@
-use kafka_protocol::api_verification::KafkaApiVersioned;
-use kafka_protocol::protocol_primitives::*;
-use kafka_protocol::protocol_serializable::*;
+use crate::kafka_protocol::api_verification::KafkaApiVersioned;
+use crate::kafka_protocol::protocol_primitives::*;
+use crate::kafka_protocol::protocol_serializable::*;
 
 #[derive(Clone, Debug)]
 pub struct AlterConfigsRequest {

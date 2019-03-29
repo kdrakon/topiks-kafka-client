@@ -1,6 +1,6 @@
 extern crate byteorder;
 
-use kafka_protocol::protocol_serializable::*;
+use crate::kafka_protocol::protocol_serializable::*;
 
 #[derive(Debug, Clone)]
 pub struct MetadataResponse {

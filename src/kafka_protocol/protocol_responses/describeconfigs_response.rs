@@ -1,4 +1,4 @@
-use kafka_protocol::protocol_serializable::*;
+use crate::kafka_protocol::protocol_serializable::*;
 
 #[derive(Clone, Debug)]
 pub struct DescribeConfigsResponse {

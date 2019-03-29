@@ -7,11 +7,11 @@ use std::net::*;
 use byteorder::{BigEndian, ReadBytesExt};
 use native_tls::TlsConnector;
 
-use kafka_protocol::protocol_request::*;
-use kafka_protocol::protocol_response::*;
-use kafka_protocol::protocol_serializable::*;
-use KafkaServerAddr;
-use IO;
+use crate::kafka_protocol::protocol_request::*;
+use crate::kafka_protocol::protocol_response::*;
+use crate::kafka_protocol::protocol_serializable::*;
+use crate::KafkaServerAddr;
+use crate::IO;
 
 #[derive(Debug)]
 pub struct ApiRequestError {

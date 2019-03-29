@@ -1,7 +1,7 @@
-use kafka_protocol::api_verification::KafkaApiVersioned;
-use kafka_protocol::protocol_primitives::ProtocolPrimitives::*;
-use kafka_protocol::protocol_serializable::ProtocolSerializeResult;
-use kafka_protocol::protocol_serializable::*;
+use crate::kafka_protocol::api_verification::KafkaApiVersioned;
+use crate::kafka_protocol::protocol_primitives::ProtocolPrimitives::*;
+use crate::kafka_protocol::protocol_serializable::ProtocolSerializeResult;
+use crate::kafka_protocol::protocol_serializable::*;
 
 #[derive(Clone)]
 pub struct MetadataRequest {
@@ -33,7 +33,7 @@ impl ProtocolSerializable for MetadataRequest {
 
 #[cfg(test)]
 mod tests {
-    use kafka_protocol::protocol_request::*;
+    use crate::kafka_protocol::protocol_request::*;
 
     use super::*;
 
